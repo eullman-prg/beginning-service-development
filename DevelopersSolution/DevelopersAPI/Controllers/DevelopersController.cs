@@ -1,10 +1,19 @@
 ﻿using DevelopersAPI.Models;
 using Microsoft.AspNetCore.Mvc;
+using DevelopersAPI.Adapters;
+using DevelopersAPI.Domain;
 
 namespace DevelopersAPI.Controllers;
 
 public class DevelopersController : ControllerBase
 {
+
+    private readonly MongoDevelopersAdapter _mongoDevelopersAdapter;
+
+    public DevelopersController(MongoDevelopersAdapter mongoDevelopersAdapter)
+    {
+        _mongoDevelopersAdapter = mongoDevelopersAdapter;
+    }
 
     // GET /on-call-developer
     [HttpGet("/on-call-developer")]
@@ -28,10 +37,20 @@ public class DevelopersController : ControllerBase
     }
 
     [HttpPost("/developers")]
-    public ActionResult AddADeveloper([FromBody] DeveloperCreateModel request)
+    public async Task<ActionResult> AddADeveloper([FromBody] DeveloperCreateModel request)
     {
-        var response = new DeveloperDetailsModel(Guid.NewGuid().ToString(), request.FirstName, request.LastName, request.Email, request.Phone);
-        return StatusCode(201, response); // "Good. Ok. I created this.
+        var developerToAdd = new DeveloperEntity
+        {
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Email = request.Email,
+            Phone = request.Phone,
+            IsOnCallDeveloper = true
+        };
+
+        await _mongoDevelopersAdapter.Developers.InsertOneAsync(developerToAdd);
+
+        return StatusCode(201); // "Good. Ok. I created this.
     }
 
 }
