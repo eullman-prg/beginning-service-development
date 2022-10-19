@@ -1,3 +1,5 @@
+using DevelopersApi;
+using DevelopersApi.Adapters;
 using DevelopersAPI.Adapters;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +11,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddHttpClient<OutageSupplierHttpAdapter>(httpClient =>
+{
+    httpClient.BaseAddress = new Uri(builder.Configuration.GetConnectionString("outages-api"));
+}).AddPolicyHandler(BasicPolicies.GetRetyPolicy()).AddPolicyHandler(BasicPolicies.GetCircuitBreakerPolicy());
 builder.Services.AddSingleton<MongoDevelopersAdapter>((sp) =>
 {
     return new MongoDevelopersAdapter(builder.Configuration.GetConnectionString("mongo"));
